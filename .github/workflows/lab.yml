@@ -18,7 +18,7 @@ jobs:
 
     env:
       SOLUTION: ./OptumLabResultsAPI.sln
-      PROJECT: .src\OptumLabResultsAPI\OptumLabResultsAPIEFCore.csproj
+      PROJECT: ./src/OptumLabResultsAPI/OptumLabResultsAPIEFCore.csproj
 
     steps:
     - name: Checkout Code
