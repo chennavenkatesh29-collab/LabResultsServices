@@ -17,6 +17,7 @@ builder.Services.AddSwaggerGen();
 
 //EF CORE -SQL Connection
 builder.Services.AddDbContext<LabResultDbContext>(options =>
+
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<ILabResultRepository, SqlLabResultRepository>();
 builder.Services.AddScoped<ILabResultService, LabResultService>();
