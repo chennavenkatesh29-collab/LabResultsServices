@@ -1,0 +1,86 @@
+
+name: .NET CI-CD Pipeline
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+
+  # JOB 1: BUILD AND PUBLISH
+  build:
+    runs-on: windows-latest
+
+    env:
+      SOLUTION: ./OptumLabResultsAPI.sln
+      PROJECT: ./src/OptumLabResultsAPI/OptumLabResultsAPIEFCore.csproj
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore Dependencies
+      run: dotnet restore "${{ env.SOLUTION }}"
+
+    - name: Build Application
+      run: dotnet build "${{ env.SOLUTION }}" --configuration Release --no-restore
+
+    - name: Run Unit Tests
+      run: dotnet test "${{ env.SOLUTION }}" --configuration Release --no-build --verbosity normal
+
+    - name: Publish Application
+      run: dotnet publish "${{ env.PROJECT }}" --configuration Release --no-build --no-restore --output publish
+
+    - name: Upload Published Files
+      uses: actions/upload-artifact@v4
+      with:
+        name: iis-publish
+        path: publish/
+
+  # JOB 2: DEPLOY TO IIS
+  deploy:
+    needs: build
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+    - name: Download Published Files
+      uses: actions/download-artifact@v4
+      with:
+        name: iis-publish
+        path: ${{ runner.temp }}\iis-publish
+
+    - name: Deploy to IIS
+      shell: powershell
+      run: |
+        $source = "$env:RUNNER_TEMP\iis-publish"
+        $target = "D:\OPTUMLabHostServer"
+
+        # Create target folder if missing
+        if (!(Test-Path $target)) {
+            New-Item -ItemType Directory -Path $target -Force
+        }
+
+        # Put application offline during deployment
+        $offline = Join-Path $target "app_offline.htm"
+        Set-Content -Path $offline -Value "Application deployment in progress"
+
+        # Copy published application files
+        Copy-Item -Path "$source\*" -Destination $target -Recurse -Force
+
+        # Bring application online
+        Remove-Item $offline -Force
+
+        Write-Host "IIS deployment completed successfully!"
