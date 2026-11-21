@@ -10,7 +10,7 @@ namespace OptumLabResultsAPI.Controllers;
 [Produces("application/json")]
 public sealed class LabResultsController(ILabResultService service) : ControllerBase
 {
-    // Post Create Api
+    // Post Create Lab Result
     [HttpPost]
     [ProducesResponseType(typeof(LabResult), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
