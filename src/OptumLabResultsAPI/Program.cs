@@ -24,6 +24,9 @@ builder.Services.AddScoped<ILabResultService, LabResultService>();
 
 var app = builder.Build();
 
+
+app.MapGet("/", () => "Welcome to Optum Lab Results API!");
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 //if (app.Environment.IsDevelopment())
